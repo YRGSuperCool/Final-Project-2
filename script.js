@@ -1,203 +1,278 @@
-const API_KEY = "thewdb";
-const searchForm = document.querySelector("#search-form");
-const searchInput = document.querySelector("#search-input");
-const movieGrid = document.querySelector("#movie-grid");
-const statusPanel = document.querySelector("#status-panel");
-const statusMessage = document.querySelector("#status-message");
-const loader = document.querySelector(".loader");
-const resultCount = document.querySelector("#result-count");
-const sortSelect = document.querySelector("#sort-select");
-const filterButtons = document.querySelectorAll(".filter-button");
-const loadMoreButton = document.querySelector("#load-more");
-const favoritesCount = document.querySelector("#favorites-count");
-const detailModal = document.querySelector("#detail-modal");
-const modalClose = document.querySelector("#modal-close");
-const detailPoster = document.querySelector("#detail-poster");
-const detailType = document.querySelector("#detail-type");
-const detailTitle = document.querySelector("#detail-title");
-const detailFacts = document.querySelector("#detail-facts");
-const detailPlot = document.querySelector("#detail-plot");
-const detailCredits = document.querySelector("#detail-credits");
-let movies = [];
-let activeType = "all";
-let currentQuery = "";
-let currentPage = 1;
-let totalResults = 0;
-let isLoading = false;
-let favorites = JSON.parse(localStorage.getItem("framefind-favorites") || "[]");
-
-function setStatus(message, isLoading = false) {
-  statusMessage.textContent = message;
-  loader.hidden = !isLoading;
-  statusPanel.hidden = !isLoading && movies.length > 0;
-}
-
-function filteredMovies() {
-  const visible =
-    activeType === "favorites"
-      ? movies.filter((movie) => favorites.includes(movie.imdbID))
-      : activeType === "all"
-        ? [...movies]
-        : movies.filter((movie) => movie.Type === activeType);
-  const sort = sortSelect.value;
-  return visible.sort((first, second) => {
-    if (sort === "az") return first.Title.localeCompare(second.Title);
-    if (sort === "za") return second.Title.localeCompare(first.Title);
-    if (sort === "newest")
-      return Number(second.Year.slice(0, 4)) - Number(first.Year.slice(0, 4));
-    if (sort === "oldest")
-      return Number(first.Year.slice(0, 4)) - Number(second.Year.slice(0, 4));
-    return 0;
-  });
-}
-
-function escapeHtml(value) {
-  return String(value).replace(
+const starterProducts = [
+  {
+    id: 1,
+    name: "Ceramic mug",
+    price: 32,
+    category: "home",
+    condition: "Excellent",
+    seller: "Mara K.",
+    color: "clay",
+    label: "drinkware",
+    image:
+      "https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?auto=format&fit=crop&w=800&q=90",
+  },
+  {
+    id: 2,
+    name: "Canvas market tote",
+    price: 24,
+    category: "wear",
+    condition: "Good",
+    seller: "Studio 14",
+    color: "canvas",
+    label: "utility",
+    image:
+      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=90",
+  },
+  {
+    id: 3,
+    name: "Oak side table",
+    price: 180,
+    category: "home",
+    condition: "Excellent",
+    seller: "Jon Bell",
+    color: "oak",
+    label: "furniture",
+    image:
+      "https://images.unsplash.com/photo-1533090481720-856c6e3c1fdc?auto=format&fit=crop&w=800&q=90",
+  },
+  {
+    id: 4,
+    name: "Brass desk lamp",
+    price: 68,
+    category: "objects",
+    condition: "Well-loved",
+    seller: "Mina R.",
+    color: "brass",
+    label: "lighting",
+    image:
+      "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=800&q=90",
+  },
+  {
+    id: 5,
+    name: "Wool beanie set",
+    price: 86,
+    category: "wear",
+    condition: "Excellent",
+    seller: "North 02",
+    color: "knit",
+    label: "apparel",
+    image:
+      "https://images.unsplash.com/photo-1576871337622-98d48d1cf531?auto=format&fit=crop&w=800&q=90",
+  },
+  {
+    id: 6,
+    name: "Stoneware pitcher",
+    price: 48,
+    category: "home",
+    condition: "Good",
+    seller: "Mara K.",
+    color: "stone",
+    label: "ceramic",
+    image:
+      "https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&w=800&q=90",
+  },
+  {
+    id: 7,
+    name: "Pocket field camera",
+    price: 125,
+    category: "objects",
+    condition: "Good",
+    seller: "Theo P.",
+    color: "camera",
+    label: "analog",
+    image:
+      "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=90",
+  },
+  {
+    id: 8,
+    name: "Linen chore jacket",
+    price: 72,
+    category: "wear",
+    condition: "Excellent",
+    seller: "Common Seller",
+    color: "linen",
+    label: "apparel",
+    image:
+      "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&fit=crop&w=800&q=90",
+  },
+];
+const $ = (selector) => document.querySelector(selector);
+const productGrid = $("#product-grid"),
+  searchForm = $("#search-form"),
+  searchInput = $("#search-input"),
+  sortSelect = $("#sort-select"),
+  emptyState = $("#empty-state"),
+  resultCount = $("#result-count"),
+  sellForm = $("#sell-form"),
+  formMessage = $("#form-message"),
+  cartDrawer = $("#cart-drawer"),
+  cartButton = $("#cart-button"),
+  closeCart = $("#close-cart"),
+  drawerOverlay = $("#drawer-overlay"),
+  cartItems = $("#cart-items"),
+  cartCount = $("#cart-count"),
+  cartTotal = $("#cart-total"),
+  checkoutButton = $("#checkout-button"),
+  checkoutMessage = $("#checkout-message");
+let savedListings = JSON.parse(
+    localStorage.getItem("common-goods-listings") || "[]",
+  ),
+  products = [...starterProducts, ...savedListings],
+  activeCategory = "all",
+  cart = JSON.parse(localStorage.getItem("common-goods-cart") || "[]");
+const money = (value) => `$${Number(value).toLocaleString()}`;
+const escapeHtml = (value) =>
+  String(value).replace(
     /[&<>'"]/g,
     (character) =>
       ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[
         character
       ],
   );
+function visibleProducts() {
+  const query = searchInput.value.trim().toLowerCase();
+  return products
+    .filter(
+      (product) =>
+        (activeCategory === "all" || product.category === activeCategory) &&
+        (!query ||
+          `${product.name} ${product.label} ${product.seller}`
+            .toLowerCase()
+            .includes(query)),
+    )
+    .sort((a, b) =>
+      sortSelect.value === "price-low"
+        ? a.price - b.price
+        : sortSelect.value === "price-high"
+          ? b.price - a.price
+          : sortSelect.value === "newest"
+            ? b.id - a.id
+            : a.id - b.id,
+    );
 }
-
-function updateFavoritesCount() {
-  favoritesCount.textContent = favorites.length;
+function artwork(product) {
+  const image = product.image
+    ? `<img src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}">`
+    : "";
+  return `<div class="product-art art-${escapeHtml(product.color)}">${image}<span>${escapeHtml(product.label)}</span></div>`;
 }
-
-function renderMovies() {
-  const visibleMovies = filteredMovies();
-  movieGrid.innerHTML = visibleMovies
-    .map((movie, index) => {
-      const poster =
-        movie.Poster !== "N/A"
-          ? `<img class="movie-poster" src="${escapeHtml(movie.Poster)}" alt="${escapeHtml(movie.Title)} poster" loading="lazy">`
-          : `<div class="movie-poster poster-missing">Poster unavailable</div>`;
-      const isFavorite = favorites.includes(movie.imdbID);
-      return `<article class="movie-card" style="animation-delay: ${index * 45}ms"><button class="movie-card-button" type="button" data-details="${escapeHtml(movie.imdbID)}">${poster}<div class="movie-meta"><span>${escapeHtml(movie.Type)}</span><span>${escapeHtml(movie.Year)}</span></div><h3>${escapeHtml(movie.Title)}</h3></button><button class="save-button ${isFavorite ? "saved" : ""}" type="button" data-favorite="${escapeHtml(movie.imdbID)}" aria-label="${isFavorite ? "Remove" : "Save"} ${escapeHtml(movie.Title)} ${isFavorite ? "from" : "to"} favorites">${isFavorite ? "★" : "☆"}</button></article>`;
-    })
+function renderProducts() {
+  const items = visibleProducts();
+  resultCount.textContent = `${items.length} ${items.length === 1 ? "piece" : "pieces"}`;
+  emptyState.hidden = items.length > 0;
+  productGrid.innerHTML = items
+    .map(
+      (product, index) =>
+        `<article class="product-card" style="animation-delay:${index * 35}ms">${artwork(product)}<div class="product-info"><div><p class="product-category">${escapeHtml(product.category)} · ${escapeHtml(product.condition)}</p><h3>${escapeHtml(product.name)}</h3><p class="seller">Sold by ${escapeHtml(product.seller)}</p></div><strong class="price">${money(product.price)}</strong></div><button class="add-button" type="button" data-add="${product.id}">Add to bag <span aria-hidden="true">+</span></button></article>`,
+    )
     .join("");
-  resultCount.textContent = `${visibleMovies.length} ${visibleMovies.length === 1 ? "result" : "results"}`;
-  statusPanel.hidden = visibleMovies.length > 0;
-  loadMoreButton.hidden =
-    activeType === "favorites" || movies.length >= totalResults;
-  if (!visibleMovies.length && movies.length)
-    setStatus("No results match this filter.");
 }
-
-async function fetchMovies(query, page = 1) {
-  if (isLoading) return;
-  isLoading = true;
-  setStatus("Searching the archive...", true);
-  if (page === 1) movieGrid.innerHTML = "";
-  try {
-    const response = await fetch(
-      `https://www.omdbapi.com/?apikey=${API_KEY}&s=${encodeURIComponent(query.trim())}&page=${page}`,
-    );
-    if (!response.ok) throw new Error("Network request failed");
-    const data = await response.json();
-    if (data.Response === "False")
-      throw new Error(data.Error || "No titles found");
-    movies =
-      page === 1 ? data.Search || [] : [...movies, ...(data.Search || [])];
-    currentPage = page;
-    totalResults = Number(data.totalResults || movies.length);
-    renderMovies();
-  } catch (error) {
-    if (page === 1) {
-      movies = [];
-      movieGrid.innerHTML = "";
-      statusPanel.hidden = false;
-      setStatus(
-        error.message.includes("found")
-          ? "No titles found. Try a different search."
-          : "We could not reach the movie archive. Please try again.",
-      );
-      resultCount.textContent = "No results";
-    } else setStatus("Could not load more results. Please try again.");
-  } finally {
-    isLoading = false;
-    if (movies.length) setStatus("");
-  }
+function saveCart() {
+  localStorage.setItem("common-goods-cart", JSON.stringify(cart));
 }
-
-function searchMovies(query) {
-  currentQuery = query.trim();
-  currentPage = 1;
-  totalResults = 0;
-  fetchMovies(currentQuery);
+function renderCart() {
+  const items = cart
+      .map((id) => products.find((product) => product.id === id))
+      .filter(Boolean),
+    total = items.reduce((sum, product) => sum + product.price, 0);
+  cartCount.textContent = items.length;
+  cartTotal.textContent = money(total);
+  cartItems.innerHTML = items.length
+    ? items
+        .map(
+          (product) =>
+            `<div class="cart-item">${artwork(product)}<div><strong>${escapeHtml(product.name)}</strong><span>${money(product.price)}</span><button type="button" data-remove="${product.id}">Remove</button></div></div>`,
+        )
+        .join("")
+    : `<p class="cart-empty">Your bag is waiting for something good.</p>`;
 }
-
-async function showDetails(imdbID) {
-  detailModal.hidden = false;
-  detailTitle.textContent = "Loading details...";
-  detailPlot.textContent = "";
-  try {
-    const response = await fetch(
-      `https://www.omdbapi.com/?apikey=${API_KEY}&i=${encodeURIComponent(imdbID)}&plot=full`,
-    );
-    const movie = await response.json();
-    if (movie.Response === "False") throw new Error();
-    detailTitle.textContent = movie.Title;
-    detailType.textContent = `${movie.Type} / ${movie.Year}`;
-    detailFacts.textContent = [movie.Runtime, movie.Genre, movie.Rated]
-      .filter((fact) => fact && fact !== "N/A")
-      .join(" • ");
-    detailPlot.textContent =
-      movie.Plot !== "N/A" ? movie.Plot : "No plot summary is available.";
-    detailCredits.textContent = `Directed by ${movie.Director !== "N/A" ? movie.Director : "unknown"} · Starring ${movie.Actors !== "N/A" ? movie.Actors : "unknown"}`;
-    detailPoster.innerHTML =
-      movie.Poster !== "N/A"
-        ? `<img src="${escapeHtml(movie.Poster)}" alt="${escapeHtml(movie.Title)} poster">`
-        : "Poster unavailable";
-  } catch (error) {
-    detailTitle.textContent = "Details unavailable";
-    detailPlot.textContent = "We could not load this title right now.";
-  }
+function openCart() {
+  cartDrawer.classList.add("open");
+  cartDrawer.setAttribute("aria-hidden", "false");
+  cartButton.setAttribute("aria-expanded", "true");
+  drawerOverlay.hidden = false;
 }
-
-function toggleFavorite(imdbID) {
-  favorites = favorites.includes(imdbID)
-    ? favorites.filter((id) => id !== imdbID)
-    : [...favorites, imdbID];
-  localStorage.setItem("framefind-favorites", JSON.stringify(favorites));
-  updateFavoritesCount();
-  renderMovies();
+function hideCart() {
+  cartDrawer.classList.remove("open");
+  cartDrawer.setAttribute("aria-hidden", "true");
+  cartButton.setAttribute("aria-expanded", "false");
+  drawerOverlay.hidden = true;
 }
-
 searchForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  if (searchInput.value.trim()) searchMovies(searchInput.value);
+  renderProducts();
+  $("#shop").scrollIntoView({ behavior: "smooth" });
 });
-sortSelect.addEventListener("change", renderMovies);
-loadMoreButton.addEventListener("click", () =>
-  fetchMovies(currentQuery, currentPage + 1),
-);
-movieGrid.addEventListener("click", (event) => {
-  const favoriteButton = event.target.closest("[data-favorite]");
-  const detailButton = event.target.closest("[data-details]");
-  if (favoriteButton) {
-    event.stopPropagation();
-    toggleFavorite(favoriteButton.dataset.favorite);
-  } else if (detailButton) showDetails(detailButton.dataset.details);
-});
-filterButtons.forEach((button) =>
+searchInput.addEventListener("input", renderProducts);
+sortSelect.addEventListener("change", renderProducts);
+document.querySelectorAll(".filter-button").forEach((button) =>
   button.addEventListener("click", () => {
-    activeType = button.dataset.type;
-    filterButtons.forEach((item) =>
-      item.classList.toggle("active", item === button),
-    );
-    if (movies.length) renderMovies();
+    activeCategory = button.dataset.category;
+    document
+      .querySelectorAll(".filter-button")
+      .forEach((item) => item.classList.toggle("active", item === button));
+    renderProducts();
   }),
 );
-modalClose.addEventListener("click", () => {
-  detailModal.hidden = true;
+productGrid.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-add]");
+  if (!button) return;
+  cart.push(Number(button.dataset.add));
+  saveCart();
+  renderCart();
+  button.textContent = "Added ✓";
+  button.classList.add("added");
+  setTimeout(() => {
+    button.innerHTML = 'Add to bag <span aria-hidden="true">+</span>';
+    button.classList.remove("added");
+  }, 1200);
 });
-detailModal.addEventListener("click", (event) => {
-  if (event.target === detailModal) detailModal.hidden = true;
+cartItems.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-remove]");
+  if (!button) return;
+  cart = cart.filter((id) => id !== Number(button.dataset.remove));
+  saveCart();
+  renderCart();
+});
+cartButton.addEventListener("click", openCart);
+closeCart.addEventListener("click", hideCart);
+drawerOverlay.addEventListener("click", hideCart);
+checkoutButton.addEventListener("click", () => {
+  checkoutMessage.textContent = cart.length
+    ? "Demo checkout ready. Your items are reserved for 15 minutes."
+    : "Add an item before checking out.";
+});
+sellForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const data = new FormData(sellForm),
+    listing = {
+      id: Date.now(),
+      name: data.get("name"),
+      price: Number(data.get("price")),
+      category: data.get("category"),
+      condition: data.get("condition"),
+      seller: "You",
+      color:
+        data.get("category") === "wear"
+          ? "linen"
+          : data.get("category") === "home"
+            ? "oak"
+            : "brass",
+      label: "new listing",
+      image:
+        "https://images.unsplash.com/photo-1523413651479-597eb2da0ad6?auto=format&fit=crop&w=800&q=85",
+    };
+  products = [listing, ...products];
+  savedListings = [listing, ...savedListings];
+  localStorage.setItem("common-goods-listings", JSON.stringify(savedListings));
+  sellForm.reset();
+  formMessage.textContent = "Your item is live in the marketplace.";
+  renderProducts();
+  $("#shop").scrollIntoView({ behavior: "smooth" });
 });
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") detailModal.hidden = true;
+  if (event.key === "Escape") hideCart();
 });
-updateFavoritesCount();
-document.querySelector("#current-year").textContent = new Date().getFullYear();
+renderProducts();
+renderCart();
+$("#current-year").textContent = new Date().getFullYear();
