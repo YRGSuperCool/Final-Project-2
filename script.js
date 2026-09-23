@@ -1,3 +1,4 @@
+const PRODUCTS_API = "https://dummyjson.com/products";
 const starterProducts = [
   {
     id: 1,
@@ -96,6 +97,176 @@ const starterProducts = [
       "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&fit=crop&w=800&q=90",
   },
 ];
+const searchFixtures = [
+  {
+    id: 20001,
+    name: "Stoneware mug",
+    price: 28,
+    category: "home",
+    condition: "Excellent",
+    seller: "Mara K.",
+    color: "stone",
+    label: "drinkware",
+    image:
+      "https://images.unsplash.com/photo-1572119865084-43c285814d63?auto=format&fit=crop&w=800&q=90",
+  },
+  {
+    id: 20002,
+    name: "Travel coffee mug",
+    price: 22,
+    category: "home",
+    condition: "Good",
+    seller: "Studio 14",
+    color: "clay",
+    label: "drinkware",
+    image:
+      "https://images.unsplash.com/photo-1517256064527-09c73fc73e38?auto=format&fit=crop&w=800&q=90",
+  },
+  {
+    id: 20003,
+    name: "Ceramic coffee cup",
+    price: 19,
+    category: "home",
+    condition: "Excellent",
+    seller: "Pine Works",
+    color: "stone",
+    label: "drinkware",
+    image:
+      "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=90",
+  },
+  {
+    id: 20004,
+    name: "Canvas carry tote",
+    price: 30,
+    category: "wear",
+    condition: "Excellent",
+    seller: "North 02",
+    color: "canvas",
+    label: "utility",
+    image:
+      "https://images.unsplash.com/photo-1594223274512-ad4803739b7c?auto=format&fit=crop&w=800&q=90",
+  },
+  {
+    id: 20005,
+    name: "Leather tote bag",
+    price: 90,
+    category: "wear",
+    condition: "Good",
+    seller: "Common Goods partner",
+    color: "oak",
+    label: "bags",
+    image:
+      "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=90",
+  },
+  {
+    id: 20006,
+    name: "Reading floor lamp",
+    price: 115,
+    category: "objects",
+    condition: "Excellent",
+    seller: "Mina R.",
+    color: "brass",
+    label: "lighting",
+    image:
+      "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?auto=format&fit=crop&w=800&q=90",
+  },
+  {
+    id: 20007,
+    name: "Walnut bookshelf",
+    price: 240,
+    category: "home",
+    condition: "Good",
+    seller: "Jon Bell",
+    color: "oak",
+    label: "furniture",
+    image:
+      "https://images.unsplash.com/photo-1594620302200-9a762244a156?auto=format&fit=crop&w=800&q=90",
+  },
+  {
+    id: 20008,
+    name: "Striped linen shirt",
+    price: 44,
+    category: "wear",
+    condition: "Excellent",
+    seller: "North 02",
+    color: "linen",
+    label: "apparel",
+    image:
+      "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=800&q=90",
+  },
+  {
+    id: 20009,
+    name: "Leather weekend bag",
+    price: 135,
+    category: "wear",
+    condition: "Good",
+    seller: "Studio 14",
+    color: "oak",
+    label: "bags",
+    image:
+      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=90",
+  },
+  {
+    id: 20010,
+    name: "Cotton cushion cover",
+    price: 26,
+    category: "home",
+    condition: "New",
+    seller: "Hearth House",
+    color: "throw",
+    label: "textile",
+    image:
+      "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=800&q=90",
+  },
+  {
+    id: 20011,
+    name: "Vintage alarm clock",
+    price: 42,
+    category: "objects",
+    condition: "Well-loved",
+    seller: "Mina R.",
+    color: "brass",
+    label: "vintage",
+    image:
+      "https://images.unsplash.com/photo-1508057198894-247b23fe5ade?auto=format&fit=crop&w=800&q=90",
+  },
+  {
+    id: 20012,
+    name: "Desk organizer",
+    price: 21,
+    category: "objects",
+    condition: "Excellent",
+    seller: "Pine Works",
+    color: "wood",
+    label: "workspace",
+    image:
+      "https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?auto=format&fit=crop&w=800&q=90",
+  },
+  {
+    id: 20013,
+    name: "Wool scarf",
+    price: 38,
+    category: "wear",
+    condition: "Excellent",
+    seller: "Common Goods partner",
+    color: "knit",
+    label: "apparel",
+    image:
+      "https://images.unsplash.com/photo-1520903920243-00d872a2d1c9?auto=format&fit=crop&w=800&q=90",
+  },
+  {
+    id: 20014,
+    name: "Rattan storage basket",
+    price: 58,
+    category: "home",
+    condition: "Good",
+    seller: "Hearth House",
+    color: "canvas",
+    label: "storage",
+    image:
+      "https://images.unsplash.com/photo-1594620302200-9a762244a156?auto=format&fit=crop&w=800&q=90",
+  },
+];
 const $ = (selector) => document.querySelector(selector);
 const productGrid = $("#product-grid"),
   searchForm = $("#search-form"),
@@ -117,9 +288,10 @@ const productGrid = $("#product-grid"),
 let savedListings = JSON.parse(
     localStorage.getItem("common-goods-listings") || "[]",
   ),
-  products = [...starterProducts, ...savedListings],
+  products = [...starterProducts, ...searchFixtures, ...savedListings],
   activeCategory = "all",
   cart = JSON.parse(localStorage.getItem("common-goods-cart") || "[]");
+let usingApiProducts = false;
 const money = (value) => `$${Number(value).toLocaleString()}`;
 const escapeHtml = (value) =>
   String(value).replace(
@@ -167,6 +339,70 @@ function renderProducts() {
     )
     .join("");
 }
+function categoryForApiProduct(category) {
+  if (
+    [
+      "mens-shirts",
+      "mens-shoes",
+      "womens-dresses",
+      "womens-shoes",
+      "womens-bags",
+      "tops",
+    ].includes(category)
+  )
+    return "wear";
+  if (
+    ["furniture", "home-decoration", "kitchen-accessories"].includes(category)
+  )
+    return "home";
+  return "objects";
+}
+function normalizeApiProduct(product) {
+  return {
+    id: 10000 + product.id,
+    name: product.title,
+    price: Math.round(product.price),
+    category: categoryForApiProduct(product.category),
+    condition: "New",
+    seller: "Common Goods partner",
+    color: "camera",
+    label: product.category.replaceAll("-", " "),
+    image: product.thumbnail || product.images?.[0],
+  };
+}
+async function loadProductsFromApi(query = "") {
+  resultCount.textContent = "Loading pieces...";
+  try {
+    const endpoint = query
+      ? `${PRODUCTS_API}/search?q=${encodeURIComponent(query)}`
+      : `${PRODUCTS_API}?limit=30`;
+    const response = await fetch(endpoint);
+    if (!response.ok) throw new Error("Product API unavailable");
+    const data = await response.json();
+    const apiProducts = (data.products || []).map(normalizeApiProduct);
+    const localMatches = query
+      ? searchFixtures.filter((product) =>
+          `${product.name} ${product.label}`
+            .toLowerCase()
+            .includes(query.toLowerCase()),
+        )
+      : [];
+    products = [
+      ...new Map(
+        [...apiProducts, ...localMatches].map((product) => [
+          product.id,
+          product,
+        ]),
+      ).values(),
+    ];
+    usingApiProducts = true;
+    renderProducts();
+  } catch (error) {
+    usingApiProducts = false;
+    resultCount.textContent = "Local pieces";
+    renderProducts();
+  }
+}
 function saveCart() {
   localStorage.setItem("common-goods-cart", JSON.stringify(cart));
 }
@@ -200,10 +436,12 @@ function hideCart() {
 }
 searchForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  renderProducts();
+  loadProductsFromApi(searchInput.value.trim());
   $("#shop").scrollIntoView({ behavior: "smooth" });
 });
-searchInput.addEventListener("input", renderProducts);
+searchInput.addEventListener("input", () => {
+  if (!usingApiProducts) renderProducts();
+});
 sortSelect.addEventListener("change", renderProducts);
 document.querySelectorAll(".filter-button").forEach((button) =>
   button.addEventListener("click", () => {
@@ -276,3 +514,4 @@ document.addEventListener("keydown", (event) => {
 renderProducts();
 renderCart();
 $("#current-year").textContent = new Date().getFullYear();
+loadProductsFromApi();
